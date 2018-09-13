@@ -1,5 +1,5 @@
 /**
- * Copyright 2005-2017 Restlet
+ * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
  * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
@@ -36,11 +36,21 @@ public class PathVariable extends Parameter {
      */
     private String example;
 
+    private String defaultValue;
+
     public String getExample() {
         return example;
     }
 
     public void setExample(String example) {
         this.example = example;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
     }
 }

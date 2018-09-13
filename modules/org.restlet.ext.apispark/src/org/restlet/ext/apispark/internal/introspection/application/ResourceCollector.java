@@ -1,5 +1,5 @@
 /**
- * Copyright 2005-2017 Restlet
+ * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
  * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
@@ -443,12 +443,13 @@ public class ResourceCollector {
             resource.setName(name);
         }
 
-        Template template = new Template(basePath);
+        resource.getPathVariables().addAll(collectInfo.getPathVariables(basePath).values());
+        /*Template template = new Template(basePath);
         for (String variable : template.getVariableNames()) {
             PathVariable pathVariable = new PathVariable();
             pathVariable.setName(variable);
             resource.getPathVariables().add(pathVariable);
-        }
+        }*/
 
         if (scheme != null) {
             resource.setAuthenticationProtocol(scheme.getName());

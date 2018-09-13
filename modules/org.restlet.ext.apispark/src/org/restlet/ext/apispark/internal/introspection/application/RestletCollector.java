@@ -1,5 +1,5 @@
 /**
- * Copyright 2005-2017 Restlet
+ * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
  * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
@@ -24,12 +24,17 @@
 
 package org.restlet.ext.apispark.internal.introspection.application;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.restlet.Restlet;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.ext.apispark.internal.introspection.IntrospectionHelper;
+import org.restlet.ext.apispark.internal.model.PathVariable;
 import org.restlet.resource.Directory;
 import org.restlet.resource.Finder;
 import org.restlet.resource.ServerResource;
@@ -37,6 +42,7 @@ import org.restlet.routing.Filter;
 import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
+import org.restlet.routing.Variable;
 import org.restlet.security.ChallengeAuthenticator;
 
 /**
@@ -113,11 +119,31 @@ public class RestletCollector {
         if (route instanceof TemplateRoute) {
             TemplateRoute templateRoute = (TemplateRoute) route;
             String path = templateRoute.getTemplate().getPattern();
-            collect(collectInfo, basePath + path, route.getNext(), scheme,
+            String routeBasePath = basePath + path;
+            Map<String, Variable> variables = templateRoute.getTemplate().getVariables();
+            collectInfo.addPathVariables(routeBasePath, convertPathVariables(variables));
+            collect(collectInfo, routeBasePath, route.getNext(), scheme,
                     introspectionHelper);
         } else {
             LOGGER.fine("Route type ignored. Class " + route.getClass());
         }
+    }
+
+
+    private static Map<String, PathVariable> convertPathVariables(Map<String, Variable> variables) {
+        if(variables.isEmpty()) {
+            return Collections.EMPTY_MAP;
+        }
+        Map<String, PathVariable> ret = new HashMap<>(variables.size() * 4 / 3);
+        for(Entry<String,Variable> entry : variables.entrySet()) {
+            PathVariable pathVariable = new PathVariable();
+            Variable var = entry.getValue();
+            pathVariable.setName(entry.getKey());
+            pathVariable.setRequired(var.isRequired());
+            pathVariable.setDefaultValue(var.getDefaultValue());
+            ret.put(entry.getKey(), pathVariable);
+        }
+        return ret;
     }
 
     /**

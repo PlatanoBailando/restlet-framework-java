@@ -1,5 +1,5 @@
 /**
- * Copyright 2005-2017 Restlet
+ * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
  * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
@@ -25,11 +25,13 @@
 package org.restlet.ext.apispark.internal.introspection.application;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.restlet.data.ChallengeScheme;
+import org.restlet.ext.apispark.internal.model.PathVariable;
 import org.restlet.ext.apispark.internal.model.Representation;
 import org.restlet.ext.apispark.internal.model.Resource;
 import org.restlet.ext.apispark.internal.model.Section;
@@ -46,6 +48,8 @@ public class CollectInfo {
     private List<ChallengeScheme> schemes = new ArrayList<>();
 
     private Map<String, Section> sections = new HashMap<>();
+
+    private Map<String, Map<String, PathVariable>> pathVariables = new HashMap<>();
 
     private boolean useSectionNamingPackageStrategy;
 
@@ -111,4 +115,23 @@ public class CollectInfo {
     public void setUseSectionNamingPackageStrategy(boolean useSectionNamingPackageStrategy) {
         this.useSectionNamingPackageStrategy = useSectionNamingPackageStrategy;
     }
+
+    public void setPathVariables(Map<String, Map<String,PathVariable>> pathVariables) {
+        this.pathVariables = pathVariables;
+    }
+
+    public Map<String, PathVariable> getPathVariables(String basePath) {
+        if(!pathVariables.containsKey(basePath)) {
+            return Collections.EMPTY_MAP;
+        }
+        return pathVariables.get(basePath);
+    }
+
+    public void addPathVariables(String basePath, Map<String, PathVariable> variables) {
+        if(variables == null) {
+            return;
+        }
+        pathVariables.put(basePath, variables);
+    }
+
 }

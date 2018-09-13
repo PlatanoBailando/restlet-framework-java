@@ -243,7 +243,7 @@ public class Swagger2Writer {
             pathParameterSwagger.setName(pathVariable.getName()); // required
             pathParameterSwagger.setDescription(pathVariable.getDescription());
             // TODO: add when implemented
-            // pathParameterSwagger.setDefaultValue(pathVariable.getDefaultValue());
+            pathParameterSwagger.setDefaultValue(pathVariable.getDefaultValue());
             operationSwagger.addParameter(pathParameterSwagger);
         }
 
@@ -305,6 +305,9 @@ public class Swagger2Writer {
             queryParameterSwagger.setName(queryParameter.getName());
             queryParameterSwagger.setDescription(queryParameter
                     .getDescription());
+            if(!queryParameter.getEnumeration().isEmpty()) {
+                queryParameterSwagger.setEnum(queryParameter.getEnumeration());
+            }
             operationSwagger.addParameter(queryParameterSwagger);
         }
 

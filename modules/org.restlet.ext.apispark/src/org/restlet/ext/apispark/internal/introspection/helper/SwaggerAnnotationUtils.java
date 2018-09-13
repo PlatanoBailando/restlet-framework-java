@@ -24,14 +24,18 @@
 
 package org.restlet.ext.apispark.internal.introspection.helper;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.restlet.data.Status;
 import org.restlet.engine.util.StringUtils;
 import org.restlet.ext.apispark.internal.introspection.util.Types;
 import org.restlet.ext.apispark.internal.model.Operation;
+import org.restlet.ext.apispark.internal.model.Header;
 import org.restlet.ext.apispark.internal.model.PayLoad;
 import org.restlet.ext.apispark.internal.model.Property;
 import org.restlet.ext.apispark.internal.model.QueryParameter;
@@ -50,6 +54,7 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.ResponseHeader;
 
 /**
  * Tools for Swagger annotations.
@@ -101,7 +106,12 @@ public class SwaggerAnnotationUtils {
         }
         parameter.setRequired(apiImplicitParam.required());
         parameter.setAllowMultiple(apiImplicitParam.allowMultiple());
-
+        if(!StringUtils.isNullOrEmpty(apiImplicitParam.dataType())) {
+            parameter.setType(apiImplicitParam.dataType());
+        }
+        if(!StringUtils.isNullOrEmpty(apiImplicitParam.allowableValues())) {
+            parameter.setEnumeration(Arrays.asList(apiImplicitParam.allowableValues().split(",")));
+        }
         operation.getQueryParameters().add(parameter);
     }
 
@@ -162,6 +172,10 @@ public class SwaggerAnnotationUtils {
         if (!StringUtils.isNullOrEmpty(apiModelProperty.allowableValues())) {
             property.setRequired(true);
             property.setList(true);
+            processAllowableValues(apiModelProperty.allowableValues(), property);
+        }
+        if(!StringUtils.isNullOrEmpty(apiModelProperty.example())) {
+            property.setExample(apiModelProperty.example());
         }
     }
 
@@ -243,6 +257,15 @@ public class SwaggerAnnotationUtils {
         if (!StringUtils.isNullOrEmpty(apiResponse.message())) {
             response.setDescription(apiResponse.message());
         }
+        if(apiResponse.responseHeaders() != null) {
+            for(ResponseHeader responseHeader : apiResponse.responseHeaders()) {
+                Header header = new Header();
+                header.setName(responseHeader.name());
+                header.setDescription(responseHeader.description());
+                header.setType(Types.convertPrimitiveType(responseHeader.response()));
+                response.getHeaders().add(header);
+            }
+        }
         Class<?> responseClazz = apiResponse.response();
         if (responseClazz != null && responseClazz != Void.TYPE
                 && responseClazz != Void.class) {
@@ -271,6 +294,24 @@ public class SwaggerAnnotationUtils {
             Operation operation, List<Class<?>> representationsUsed) {
         for (ApiResponse apiResponse : apiResponses.value()) {
             processApiResponse(apiResponse, operation, representationsUsed);
+        }
+    }
+    // Look for range(num,num), parens could be []
+    private static final Pattern rangePattern = Pattern.compile("^range[\\[(](?<range>(?:[\\d]+|-Infinity),(?:[\\d]+|Infinity))[\\])]$");
+
+    private static void processAllowableValues(String allowableValues, Property property) {
+        String trimmed = allowableValues.trim();
+        Matcher matcher = rangePattern.matcher(trimmed);
+        if(!matcher.matches()) {
+            property.setEnumeration(Arrays.asList(trimmed.split(",")));
+            return;
+        }
+        String[] minMax = matcher.group("range").split(",");
+        if(!"-Infinity".equals(minMax[0])) {
+            property.setMin(minMax[0]);
+        }
+        if(!"Infinity".equals(minMax[1])) {
+            property.setMax(minMax[1]);
         }
     }
 }
